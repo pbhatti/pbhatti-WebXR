@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import {ARButton} from 'https://unpkg.com/three@0.126.0/examples/jsm/webxr/ARButton.js'
-console.log(ARButton)
+import { VRButton } from 'three/addons/webxr/VRButton.js'
 
 
 
@@ -78,11 +78,12 @@ window.addEventListener('resize', () =>
  * Camera
  */
 // Base camera
-const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 100)
+const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 1000)
 camera.position.x = 1
 camera.position.y = 1
 camera.position.z = 2
 scene.add(camera)
+
 
 // Controls
 const controls = new OrbitControls(camera, canvas)
@@ -91,24 +92,33 @@ controls.enableDamping = true
 /**
  * Renderer
  */
-const renderer = new THREE.WebGLRenderer({
-    canvas: canvas
-})
-renderer.setSize(sizes.width, sizes.height)
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-renderer.xr.enabled = true
+ const renderer = new THREE.WebGLRenderer();
+ renderer.setSize(window.innerWidth, window.innerHeight);
+ document.body.appendChild(renderer.domElement);
 
 // Add AR button
 const button = ARButton.createButton(renderer)
 document.body.appendChild(button)
+
+// Create a VR button
+const vrButton = new VRButton(renderer)
+document.body.appendChild( VRButton.createButton( renderer ) );
+renderer.xr.enabled = true;
+
+// Initialize VR controls
+const vrControls = new THREE.VRControls(camera);
+
+// Initialize VR effect
+const vrEffect = new THREE.VREffect(renderer);
+vrEffect.setSize(window.innerWidth, window.innerHeight);
 
 /**
  * Animate
  */
 const clock = new THREE.Clock()
 
-const tick = () =>
-{
+renderer.setAnimationLoop( function () {
+
     const elapsedTime = clock.getElapsedTime()
 
     box.rotation.x = 0.1 * elapsedTime,
@@ -119,6 +129,11 @@ const tick = () =>
     torus.rotation.y = -0.2 * elapsedTime,
     cone.rotation.y = -0.2 * elapsedTime
 
+    // Update VR controls
+    vrControls.update();
+
+    // Render scene
+    vrEffect.render(scene, camera);
 
     // Update controls
     controls.update()
@@ -126,8 +141,34 @@ const tick = () =>
     // Render
     renderer.render(scene, camera)
 
-    // Call tick again on the next frame
-    window.requestAnimationFrame(tick)
-}
+} );
 
-tick()
+//const tick = () =>
+//{
+    // const elapsedTime = clock.getElapsedTime()
+
+    // box.rotation.x = 0.1 * elapsedTime,
+    // torus.rotation.x = 0.1 * elapsedTime,
+    // cone.rotation.x = 0.1 * elapsedTime
+
+    // box.rotation.y = -0.2 * elapsedTime,
+    // torus.rotation.y = -0.2 * elapsedTime,
+    // cone.rotation.y = -0.2 * elapsedTime
+
+    // Update VR controls
+    //vrControls.update();
+
+    // Render scene
+    //vrEffect.render(scene, camera);
+
+    // Update controls
+    //controls.update()
+
+    // Render
+    //renderer.render(scene, camera)
+
+    // Call tick again on the next frame
+    //window.requestAnimationFrame(tick)
+//}
+
+//tick()
